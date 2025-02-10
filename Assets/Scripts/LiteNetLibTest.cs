@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using UnityEngine;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -43,12 +45,17 @@ public class LiteNetLibTest : MonoBehaviour, INetEventListener
 
     public void OnPeerConnected(NetPeer peer)
     {
-        Debug.Log("[SERVER] Client connected: " + peer.EndPoint);
+        Debug.Log("[SERVER] Client connected: " + peer.Id);
 
         // Send a message from Client to Server
         NetDataWriter writer = new NetDataWriter();
         writer.Put("Hello from Client!");
         peer.Send(writer, DeliveryMethod.ReliableOrdered);
+    }
+    
+    public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
+    {
+        Debug.LogError("[ERROR] Network error: " + socketError);
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
@@ -58,14 +65,14 @@ public class LiteNetLibTest : MonoBehaviour, INetEventListener
         reader.Recycle();
     }
 
-    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+    void INetEventListener.OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
     {
-        Debug.Log("[SERVER] Client disconnected: " + peer.EndPoint);
+        OnNetworkReceiveUnconnected(remoteEndPoint, reader, messageType);
     }
 
-    public void OnNetworkError(IPEndPoint endPoint, int socketErrorCode) 
+    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Debug.LogError("[ERROR] Network error: " + socketErrorCode);
+        Debug.Log("[SERVER] Client disconnected: " + peer.Id);
     }
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType) { }
